@@ -8,7 +8,7 @@ from urllib.parse import urlparse, unquote
 import aiohttp
 from PIL import Image
 from bs4 import BeautifulSoup
-from tqdm.asyncio import tqdm as async_tqdm
+from tqdm import tqdm
 
 BASE_DIR = "downloaded_images"
 HEADERS = {
@@ -17,28 +17,28 @@ HEADERS = {
 MAX_WORKERS = 10
 
 
-async def download_and_convert(session, url, output_path, semaphore):
-    async with semaphore:
-        if url.startswith("data:image"):
-            # Handle base64 encoded images
-            image_format = url.split(";")[0].split("/")[-1]
-            image_b64 = url.split(",")[1]
-            image_data = base64.b64decode(image_b64)
+async def download_and_convert(session, url, output_path):
+    if url.startswith("data:image"):
+        # Handle base64 encoded images
+        image_format = url.split(";")[0].split("/")[-1]
+        image_b64 = url.split(",")[1]
+        image_data = base64.b64decode(image_b64)
 
-            with open(output_path, "wb") as f:
-                f.write(image_data)
-        else:
-
+        with open(output_path, "wb") as f:
+            f.write(image_data)
+    else:
+        try:
             async with session.get(url) as response:
-                if response.status != 200 or "image" not in response.headers.get(
-                    "Content-Type", ""
-                ):
-                    print(f"Skipping non-image URL: {url}")
-                    return
+                response.raise_for_status()  # Raises an error if the HTTP request returned an unsuccessful status code
+                if "image" not in response.headers.get("Content-Type", ""):
+                    raise ValueError("URL is not an image")
+
                 image_data = await response.read()
 
             image = Image.open(BytesIO(image_data))
             image.save(output_path, "PNG")
+        except (aiohttp.ClientError, aiohttp.ServerTimeoutError, ValueError) as e:
+            print(f"Error downloading {url}. Reason: {str(e)}")
 
 
 async def get_soup(session, url):
@@ -47,7 +47,7 @@ async def get_soup(session, url):
     return BeautifulSoup(content, "html.parser")
 
 
-async def scrape_one(session, img_tag, semaphore):
+async def scrape_one(session, img_tag):
     img_url = img_tag.get("src")
     if img_url:
         parsed_url = urlparse(img_url)
@@ -56,19 +56,34 @@ async def scrape_one(session, img_tag, semaphore):
         base_file_name_without_ext = os.path.splitext(base_file_name)[0][:25]
         file_name = os.path.join(BASE_DIR, f"{base_file_name_without_ext}.png")
 
-        semaphore = asyncio.Semaphore(MAX_WORKERS) # for rate limiting
-
-        async with semaphore:
-            await download_and_convert(session, img_url, file_name, semaphore)
+        await download_and_convert(session, img_url, file_name)
 
     return img_tag
 
 
+async def safe_scrape_one(session, tag, progress_bar=None):
+    """
+    Wraps around scrape_one, catches exceptions from single image download.
+
+    :param session:
+    :param tag:
+    :param progress_bar:
+    :return:
+    """
+    try:
+        result = await scrape_one(session, tag)
+        if progress_bar:
+            progress_bar.update(1)
+        return result
+    except Exception as e:
+        if progress_bar:
+            progress_bar.update(1)
+        print(f"Error processing image: {e}")
+        return None
+
+
 async def scrape_images(search_query):
     unsplash_url = f"https://unsplash.com/s/photos/{search_query}"
-
-    # Create the semaphore here
-    semaphore = asyncio.Semaphore(MAX_WORKERS)
 
     async with aiohttp.ClientSession() as session:
         soup = await get_soup(session, unsplash_url)
@@ -76,34 +91,24 @@ async def scrape_images(search_query):
         # Find all img tags
         img_tags = soup.find_all("img")
 
-        print(
-            f"Found {len(img_tags)} images to download..."
-        )
+        print(f"Found {len(img_tags)} images to download...")
 
         if not os.path.exists(BASE_DIR):
             os.makedirs(BASE_DIR)
 
-        # Pass the semaphore to each task
-        tasks = [scrape_one(session, tag, semaphore) for tag in img_tags]
+        with tqdm(total=len(img_tags), desc="Downloading") as progress_bar:
+            tasks = [safe_scrape_one(session, tag, progress_bar) for tag in img_tags]
+            res = await asyncio.gather(*tasks, return_exceptions=True)
 
-        res = []
-        for coro in async_tqdm.as_completed(
-                tasks, total=len(img_tags), desc="Downloading"
-        ):
-            # Collect the result from the coroutine
-            result = await coro
-            res.append(result)
-
-    return len(res)
+    return len([r for r in res if res])
 
 
-def main():
+async def main():
     t0 = time.time()
-    count = asyncio.run(scrape_images("dog"))
+    count = await scrape_images("dog")
     elapsed = time.time() - t0
-    # msg = '\n{} dog pics downloaded in {:.2f}s'
     print(f"\n{count} dog pics downloaded in {elapsed:.2f}s")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
