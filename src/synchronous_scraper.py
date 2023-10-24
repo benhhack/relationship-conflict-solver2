@@ -1,12 +1,12 @@
 import base64
 import os
-import requests
-
-from bs4 import BeautifulSoup
-from PIL import Image
-from tqdm import tqdm
-
+import time
 from io import BytesIO
+
+import requests
+from PIL import Image
+from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 BASE_DIR = 'downloaded_images'
 HEADERS = {
@@ -62,8 +62,14 @@ def scrape_images_from_unsplash(search_query):
             file_name = os.path.join(BASE_DIR, f"{search_query}_{idx}.png")
             download_and_convert(img_url, file_name)
 
+    return len(img_tags)
+
+def main():
+    t0 = time.time()
+    count = scrape_images_from_unsplash("dog")
+    elapsed = time.time() - t0
+    # msg = '\n{} dog pics downloaded in {:.2f}s'
+    print(f'\n{count} dog pics downloaded in {elapsed:.2f}s')
 
 if __name__ == "__main__":
-    query = "dog"
-    scrape_images_from_unsplash(query)
-    print(f"Downloaded images for query '{query}'!")
+    main()
