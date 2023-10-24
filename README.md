@@ -126,14 +126,14 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
-[ ] Create a synchronous scraper to create a baseline
-[ ] Create a multithreaded scraper
-[ ] Create a multiprocess scraper
-[ ] Create an asynchronous scraper
-[ ] Run experiments to compare
-[ ] Code a command line parser to choose scraping mode
-[ ] Train a CNN to ensure the pics are dog pics (async)
-[ ] Build a bot to send them out
+-[x] Create a synchronous scraper to create a baseline
+-[x] Create a multithreaded scraper
+-[x] Create a multiprocess scraper
+-[ ] Create an asynchronous scraper
+-[ ] Run experiments to compare
+-[ ] Code a command line parser to choose scraping mode
+-[ ] Train a CNN to ensure the pics are dog pics (async)
+-[ ] Build a bot to send them out
 
 <!-- See the [open issues][issues-url] for a full list of proposed features (and known issues). -->
 
