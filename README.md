@@ -15,7 +15,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/benhhack/cpp-trading-engine">
+  <a href="https://github.com/benhhack/relationship-conflict-solver2">
     <img src="images/logo.jpeg" alt="Logo" width="80" height="80">
   </a>
 
@@ -28,9 +28,9 @@
     <br />
     <br />
     <!--<a href="https://github.com/benhhack/cpp-trading-engine">View Demo</a>-->
-    <a href="https://github.com/benhhack/cpp-trading-engine/issues">Report Bug</a>
+    <a href="https://github.com/benhhack/relationship-conflict-solver2/issues">Report Bug</a>
     ·
-    <a href="https://github.combenhhack/cpp-trading-engine/issues">Request Feature</a>
+    <a href="https://github.combenhhack/relationship-conflict-solver2/issues">Request Feature</a>
   </p>
 </div>
 
@@ -93,23 +93,19 @@ Finally, the bot needs to send the photos. We will use either Telegram or Whatsa
 <!-- GETTING STARTED -->
 ## Getting Started
 
-After installing, compile the project 
-```sh
-g++ --std=c++11 *.cpp -o <name-of-executable>
-```
+
 
 ### Prerequisites
 
-* C++ (and probably an IDE to work in)
-* a compiler for C++
+* Coming soon ...
 
 ### Installation
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/benhhack/cpp-trading-engine
+   git clone https://github.com/benhhack/relationship-conflict-solver2
    ```
-2. Make sure you have a C++ compiler installed.
+
    
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
